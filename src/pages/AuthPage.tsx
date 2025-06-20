@@ -29,7 +29,7 @@ const AuthPage = () => {
     const password = formData.get("password") as string;
     const fullName = formData.get("fullName") as string;
 
-    const { error } = await signUp(email, password, { full_name: fullName });
+    const { data, error } = await signUp(email, password, { full_name: fullName });
     
     if (error) {
       toast({
@@ -37,11 +37,18 @@ const AuthPage = () => {
         description: error.message,
         variant: "destructive",
       });
-    } else {
+    } else if (data?.user && !data?.user.email_confirmed_at) {
       toast({
         title: "Check your email",
-        description: "We've sent you a confirmation link.",
+        description: "We've sent you a confirmation link. Click it to complete your registration.",
       });
+    } else if (data?.user) {
+      // User is automatically signed in
+      toast({
+        title: "Welcome!",
+        description: "Your account has been created successfully.",
+      });
+      navigate(from, { replace: true });
     }
     setIsLoading(false);
   };
@@ -63,6 +70,10 @@ const AuthPage = () => {
         variant: "destructive",
       });
     } else {
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully.",
+      });
       navigate(from, { replace: true });
     }
     setIsLoading(false);

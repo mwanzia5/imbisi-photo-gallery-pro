@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Mail, Lock, User, Github, Chrome } from "lucide-react";
+import { Camera, Mail, Lock, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,13 +36,7 @@ const AuthPage = () => {
         description: error.message,
         variant: "destructive",
       });
-    } else if (data?.user && !data?.user.email_confirmed_at) {
-      toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link. Click it to complete your registration.",
-      });
     } else if (data?.user) {
-      // User is automatically signed in
       toast({
         title: "Welcome!",
         description: "Your account has been created successfully.",
@@ -77,23 +70,6 @@ const AuthPage = () => {
       navigate(from, { replace: true });
     }
     setIsLoading(false);
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
-    });
-    
-    if (error) {
-      toast({
-        title: "Social Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   };
 
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -141,7 +117,7 @@ const AuthPage = () => {
             <Card className="glass-effect border-white/10">
               <CardHeader>
                 <CardTitle className="text-white">Welcome Back</CardTitle>
-                <CardDescription>Sign in to your account</CardDescription>
+                <CardDescription>Enter any email and password to continue</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
@@ -153,7 +129,7 @@ const AuthPage = () => {
                         id="email"
                         name="email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="Enter any email (e.g., test@example.com)"
                         className="pl-10 bg-studio-dark border-white/20 focus:border-studio-blue"
                         required
                       />
@@ -167,7 +143,7 @@ const AuthPage = () => {
                         id="password"
                         name="password"
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="Enter any password"
                         className="pl-10 bg-studio-dark border-white/20 focus:border-studio-blue"
                         required
                       />
@@ -181,35 +157,6 @@ const AuthPage = () => {
                     {isLoading ? "Signing In..." : "Sign In"}
                   </Button>
                 </form>
-
-                <div className="mt-6">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/10" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-studio-dark px-2 text-muted-foreground">Or continue with</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleSocialLogin('google')}
-                      className="border-white/20 hover:bg-studio-midnight"
-                    >
-                      <Chrome className="h-4 w-4 mr-2" />
-                      Google
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleSocialLogin('github')}
-                      className="border-white/20 hover:bg-studio-midnight"
-                    >
-                      <Github className="h-4 w-4 mr-2" />
-                      GitHub
-                    </Button>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -218,7 +165,7 @@ const AuthPage = () => {
             <Card className="glass-effect border-white/10">
               <CardHeader>
                 <CardTitle className="text-white">Create Account</CardTitle>
-                <CardDescription>Get started with your photography studio</CardDescription>
+                <CardDescription>Enter any details to get started</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
@@ -244,7 +191,7 @@ const AuthPage = () => {
                         id="email"
                         name="email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="Enter any email"
                         className="pl-10 bg-studio-dark border-white/20 focus:border-studio-blue"
                         required
                       />
@@ -258,7 +205,7 @@ const AuthPage = () => {
                         id="password"
                         name="password"
                         type="password"
-                        placeholder="Create a password"
+                        placeholder="Create any password"
                         className="pl-10 bg-studio-dark border-white/20 focus:border-studio-blue"
                         required
                       />
@@ -280,7 +227,7 @@ const AuthPage = () => {
             <Card className="glass-effect border-white/10">
               <CardHeader>
                 <CardTitle className="text-white">Reset Password</CardTitle>
-                <CardDescription>Enter your email to reset your password</CardDescription>
+                <CardDescription>Enter any email to continue</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleResetPassword} className="space-y-4">
@@ -292,7 +239,7 @@ const AuthPage = () => {
                         id="resetEmail"
                         name="resetEmail"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="Enter any email"
                         className="pl-10 bg-studio-dark border-white/20 focus:border-studio-blue"
                         required
                       />

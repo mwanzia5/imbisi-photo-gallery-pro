@@ -29,49 +29,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Check if user is already "logged in" (stored in localStorage)
+    const demoUser = localStorage.getItem('demo-user');
+    if (demoUser) {
+      const userData = JSON.parse(demoUser);
+      setUser(userData);
+      setSession({ user: userData } as Session);
+    }
+    setLoading(false);
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const { data, error } = await supabase.auth.signUp({
+    // Create a demo user object
+    const demoUser = {
+      id: Math.random().toString(36).substr(2, 9),
       email,
-      password,
-      options: {
-        data: metadata
-      }
-    });
-    return { data, error };
+      user_metadata: metadata || {},
+      created_at: new Date().toISOString(),
+    } as User;
+
+    localStorage.setItem('demo-user', JSON.stringify(demoUser));
+    setUser(demoUser);
+    setSession({ user: demoUser } as Session);
+    
+    return { data: { user: demoUser }, error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // Accept any email/password combination
+    const demoUser = {
+      id: Math.random().toString(36).substr(2, 9),
       email,
-      password,
-    });
-    return { data, error };
+      user_metadata: {},
+      created_at: new Date().toISOString(),
+    } as User;
+
+    localStorage.setItem('demo-user', JSON.stringify(demoUser));
+    setUser(demoUser);
+    setSession({ user: demoUser } as Session);
+    
+    return { data: { user: demoUser }, error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('demo-user');
+    setUser(null);
+    setSession(null);
   };
 
   const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-    return { data, error };
+    // Just return success for demo purposes
+    return { data: {}, error: null };
   };
 
   const value = {

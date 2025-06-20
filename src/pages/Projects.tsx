@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,67 +9,109 @@ import { Textarea } from "@/components/ui/textarea";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, Plus, Calendar, MapPin, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Project {
+  id: string;
+  title: string;
+  description: string | null;
+  client_name: string | null;
+  shoot_date: string | null;
+  location: string | null;
+  status: string;
+  created_at: string;
+  image_count?: number;
+}
 
 const Projects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const projects = [
-    {
-      id: 1,
-      title: "Sarah & Mike Wedding",
-      description: "Beautiful outdoor wedding ceremony and reception",
-      client: "Sarah Johnson",
-      date: "2024-01-15",
-      location: "Central Park, NYC",
-      status: "In Progress",
-      photos: 156,
-      coverImage: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400"
-    },
-    {
-      id: 2,
-      title: "Corporate Headshots",
-      description: "Professional headshots for tech company executives",
-      client: "TechCorp Inc.",
-      date: "2024-01-10",
-      location: "Downtown Office",
-      status: "Completed",
-      photos: 45,
-      coverImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400"
-    },
-    {
-      id: 3,
-      title: "Product Photography",
-      description: "Fashion brand product catalog shoot",
-      client: "Fashion Brand Co.",
-      date: "2024-01-08",
-      location: "Studio A",
-      status: "Editing",
-      photos: 89,
-      coverImage: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400"
-    },
-    {
-      id: 4,
-      title: "Family Portrait Session",
-      description: "Annual family photos at the beach",
-      client: "The Anderson Family",
-      date: "2024-01-05",
-      location: "Santa Monica Beach",
-      status: "Delivered",
-      photos: 67,
-      coverImage: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400"
-    },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchProjects();
+    }
+  }, [user]);
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const fetchProjects = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        id,
+        title,
+        description,
+        client_name,
+        shoot_date,
+        location,
+        status,
+        created_at,
+        images(count)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch projects",
+        variant: "destructive",
+      });
+    } else if (data) {
+      const projectsWithCount = data.map(project => ({
+        ...project,
+        image_count: project.images?.[0]?.count || 0
+      }));
+      setProjects(projectsWithCount);
+    }
+    setLoading(false);
+  };
+
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Project Created",
-      description: "Your new project has been created successfully.",
-    });
-    setIsDialogOpen(false);
+    if (!user) return;
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    const projectData = {
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      client_name: formData.get("client") as string,
+      shoot_date: formData.get("date") as string,
+      location: formData.get("location") as string,
+      status: formData.get("status") as string,
+      user_id: user.id,
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([projectData])
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create project",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Project Created",
+        description: "Your new project has been created successfully.",
+      });
+      setIsDialogOpen(false);
+      fetchProjects(); // Refresh the list
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -85,6 +127,17 @@ const Projects = () => {
         return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen w-full bg-studio-dark">
+        <AppSidebar />
+        <main className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-white">Loading projects...</div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-studio-dark">
@@ -118,6 +171,7 @@ const Projects = () => {
                   <Label htmlFor="title">Project Title</Label>
                   <Input 
                     id="title" 
+                    name="title"
                     placeholder="e.g., Wedding Photography"
                     className="bg-studio-dark border-white/20 focus:border-studio-blue"
                     required
@@ -127,9 +181,9 @@ const Projects = () => {
                   <Label htmlFor="client">Client Name</Label>
                   <Input 
                     id="client" 
+                    name="client"
                     placeholder="e.g., John & Jane Doe"
                     className="bg-studio-dark border-white/20 focus:border-studio-blue"
-                    required
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -137,25 +191,40 @@ const Projects = () => {
                     <Label htmlFor="date">Shoot Date</Label>
                     <Input 
                       id="date" 
+                      name="date"
                       type="date"
                       className="bg-studio-dark border-white/20 focus:border-studio-blue"
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input 
-                      id="location" 
-                      placeholder="e.g., Central Park"
-                      className="bg-studio-dark border-white/20 focus:border-studio-blue"
-                      required
-                    />
+                    <Label htmlFor="status">Status</Label>
+                    <Select name="status" defaultValue="In Progress">
+                      <SelectTrigger className="bg-studio-dark border-white/20 focus:border-studio-blue">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="In Progress">In Progress</SelectItem>
+                        <SelectItem value="Editing">Editing</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                        <SelectItem value="Delivered">Delivered</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input 
+                    id="location" 
+                    name="location"
+                    placeholder="e.g., Central Park"
+                    className="bg-studio-dark border-white/20 focus:border-studio-blue"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea 
                     id="description" 
+                    name="description"
                     placeholder="Brief description of the project..."
                     className="bg-studio-dark border-white/20 focus:border-studio-blue"
                     rows={3}
@@ -173,58 +242,74 @@ const Projects = () => {
         </div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id} className="glass-effect border-white/10 hover-lift group overflow-hidden">
-              <div className="relative h-48 overflow-hidden">
-                <img 
-                  src={project.coverImage} 
-                  alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-studio-dark/80 to-transparent" />
-                <Badge 
-                  className={`absolute top-4 right-4 ${getStatusColor(project.status)}`}
-                >
-                  {project.status}
-                </Badge>
-              </div>
-              
-              <CardHeader>
-                <CardTitle className="text-white flex items-center space-x-2">
-                  <Camera className="w-5 h-5 text-studio-blue" />
-                  <span>{project.title}</span>
-                </CardTitle>
-                <CardDescription>{project.description}</CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <User className="w-4 h-4" />
-                  <span>{project.client}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(project.date).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>{project.location}</span>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                  <span className="text-sm text-muted-foreground">{project.photos} photos</span>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="border-studio-blue/30 text-studio-blue hover:bg-studio-blue hover:text-white"
+        {projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <Card key={project.id} className="glass-effect border-white/10 hover-lift group overflow-hidden">
+                <div className="relative h-48 bg-gradient-to-br from-studio-blue/20 to-studio-accent/20 flex items-center justify-center">
+                  <Camera className="w-16 h-16 text-studio-blue/50" />
+                  <Badge 
+                    className={`absolute top-4 right-4 ${getStatusColor(project.status)}`}
                   >
-                    View Project
-                  </Button>
+                    {project.status}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center space-x-2">
+                    <Camera className="w-5 h-5 text-studio-blue" />
+                    <span>{project.title}</span>
+                  </CardTitle>
+                  <CardDescription>{project.description || 'No description provided'}</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="space-y-3">
+                  {project.client_name && (
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <User className="w-4 h-4" />
+                      <span>{project.client_name}</span>
+                    </div>
+                  )}
+                  {project.shoot_date && (
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      <span>{new Date(project.shoot_date).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {project.location && (
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{project.location}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                    <span className="text-sm text-muted-foreground">{project.image_count || 0} photos</span>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-studio-blue/30 text-studio-blue hover:bg-studio-blue hover:text-white"
+                    >
+                      View Project
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Camera className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No projects yet</h3>
+            <p className="text-muted-foreground mb-6">Create your first photography project to get started</p>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="bg-gradient-to-r from-studio-blue to-studio-accent"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Project
+            </Button>
+          </div>
+        )}
       </main>
     </div>
   );

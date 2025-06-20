@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
@@ -17,39 +19,49 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen w-full">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/dashboard" element={
-              <SidebarProvider>
-                <Dashboard />
-              </SidebarProvider>
-            } />
-            <Route path="/projects" element={
-              <SidebarProvider>
-                <Projects />
-              </SidebarProvider>
-            } />
-            <Route path="/gallery" element={
-              <SidebarProvider>
-                <Gallery />
-              </SidebarProvider>
-            } />
-            <Route path="/bookings" element={
-              <SidebarProvider>
-                <Bookings />
-              </SidebarProvider>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="min-h-screen w-full">
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <Dashboard />
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <Projects />
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/gallery" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <Gallery />
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/bookings" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <Bookings />
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

@@ -9,6 +9,128 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          client_email: string
+          client_name: string
+          created_at: string
+          id: string
+          location: string | null
+          notes: string | null
+          shoot_date: string
+          shoot_time: string | null
+          shoot_type: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_email: string
+          client_name: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          shoot_date: string
+          shoot_time?: string | null
+          shoot_type?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_email?: string
+          client_name?: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          shoot_date?: string
+          shoot_time?: string | null
+          shoot_type?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      images: {
+        Row: {
+          created_at: string
+          filename: string
+          id: string
+          metadata: Json | null
+          project_id: string
+          tags: string[] | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filename: string
+          id?: string
+          metadata?: Json | null
+          project_id: string
+          tags?: string[] | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          id?: string
+          metadata?: Json | null
+          project_id?: string
+          tags?: string[] | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "images_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client_name: string | null
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          shoot_date: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          shoot_date?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          shoot_date?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null

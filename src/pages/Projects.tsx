@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const Projects = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -64,11 +66,11 @@ const Projects = () => {
 
       if (error) {
         console.error('Error fetching projects:', error);
-        // Don't show error for empty results
         if (error.code !== 'PGRST116') {
           toast({
-            title: "Info",
-            description: "No projects found yet. Create your first project!",
+            title: "Error",
+            description: "Failed to fetch projects. Please try again.",
+            variant: "destructive",
           });
         }
         setProjects([]);
@@ -82,6 +84,11 @@ const Projects = () => {
       }
     } catch (error) {
       console.error('Unexpected error fetching projects:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while fetching projects.",
+        variant: "destructive",
+      });
       setProjects([]);
     }
     setLoading(false);
@@ -89,18 +96,28 @@ const Projects = () => {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a project.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setCreating(true);
     const formData = new FormData(e.target as HTMLFormElement);
     const projectData = {
       title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      client_name: formData.get("client") as string,
-      shoot_date: formData.get("date") as string,
-      location: formData.get("location") as string,
-      status: formData.get("status") as string,
+      description: formData.get("description") as string || null,
+      client_name: formData.get("client") as string || null,
+      shoot_date: formData.get("date") as string || null,
+      location: formData.get("location") as string || null,
+      status: formData.get("status") as string || "In Progress",
       user_id: user.id,
     };
+
+    console.log('Creating project with data:', projectData);
 
     try {
       const { data, error } = await supabase
@@ -113,25 +130,28 @@ const Projects = () => {
         console.error('Error creating project:', error);
         toast({
           title: "Error",
-          description: "Failed to create project",
+          description: `Failed to create project: ${error.message}`,
           variant: "destructive",
         });
       } else {
+        console.log('Project created successfully:', data);
         toast({
-          title: "Project Created",
+          title: "Success",
           description: "Your new project has been created successfully.",
         });
         setIsDialogOpen(false);
+        (e.target as HTMLFormElement).reset();
         fetchProjects(); // Refresh the list
       }
     } catch (error) {
       console.error('Unexpected error creating project:', error);
       toast({
         title: "Error",
-        description: "Failed to create project",
+        description: "An unexpected error occurred while creating the project.",
         variant: "destructive",
       });
     }
+    setCreating(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -252,9 +272,10 @@ const Projects = () => {
                 </div>
                 <Button 
                   type="submit" 
+                  disabled={creating}
                   className="w-full bg-gradient-to-r from-studio-blue to-studio-accent hover:from-studio-blue-light hover:to-studio-accent/80"
                 >
-                  Create Project
+                  {creating ? "Creating..." : "Create Project"}
                 </Button>
               </form>
             </DialogContent>

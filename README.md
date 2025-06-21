@@ -1,82 +1,138 @@
 
-# Imbisi Studio - Professional Photography Management Platform
+# Photography Studio Management App
 
-Imbisi Studio is a comprehensive web-based photography management platform built for professional photographers to manage their projects, clients, bookings, and image galleries efficiently.
+A modern, full-featured photography business management application built with React, TypeScript, and Supabase. This application helps photographers manage their projects, bookings, and client relationships with a sleek, professional interface.
 
-## Features
+## 🚀 Features
 
-### 🔐 Authentication System
-- **User Registration & Login**: Secure email/password authentication
-- **Social Login**: Google and GitHub OAuth integration
-- **Password Reset**: Email-based password recovery
-- **Protected Routes**: Secure access to dashboard and features
+### Project Management
+- Create and organize photography projects
+- Track project status (In Progress, Editing, Completed, Delivered)
+- Manage client information and shoot details
+- Image gallery integration
+- Project timeline tracking
 
-### 📊 Dashboard
-- **Real-time Statistics**: Overview of active projects, total images, and recent bookings
-- **Quick Actions**: Fast access to create new projects and view recent activity
-- **Recent Projects**: Display of latest photography projects
-- **Activity Feed**: Recent bookings and project updates
+### Dashboard
+- Comprehensive overview of your business
+- Active projects statistics
+- Photo count tracking
+- Pending bookings overview
+- Quick action shortcuts
 
-### 🎯 Project Management
-- **Create Projects**: Add new photography projects with client details
-- **Project Details**: Track project status, client information, shoot dates, and locations
-- **Status Tracking**: Monitor project progress (In Progress, Completed, Editing, Delivered)
-- **Search & Filter**: Find projects quickly with search functionality
+### Booking System
+- Client booking management
+- Shoot scheduling
+- Location tracking
+- Booking status management
+- Client communication tools
 
-### 🖼️ Image Gallery
-- **Image Upload**: Secure image upload to Supabase Storage
-- **Gallery View**: Beautiful grid layout for viewing images
-- **Project Organization**: Images organized by photography projects
-- **Metadata Support**: Store and display image metadata and tags
+### Image Gallery
+- Upload and organize photos by project
+- Tag and categorize images
+- Metadata management
+- Secure file storage
 
-### 📅 Booking System
-- **Client Bookings**: Manage photography session bookings
-- **Schedule Management**: Track shoot dates, times, and locations
-- **Status Updates**: Monitor booking status (Pending, Approved, Rejected, Completed)
-- **Client Information**: Store client contact details and requirements
+### Authentication
+- Secure user authentication
+- Demo mode for testing
+- User profile management
+- Protected routes
 
-## Technology Stack
+## 🛠️ Tech Stack
 
-### Frontend
-- **React 18**: Modern React with functional components and hooks
-- **TypeScript**: Type-safe JavaScript for better development experience
-- **Tailwind CSS**: Utility-first CSS framework for styling
-- **Shadcn/UI**: High-quality, accessible UI components
-- **React Router**: Client-side routing for navigation
-- **Lucide React**: Beautiful icon library
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: Shadcn/ui, Radix UI primitives
+- **Styling**: Tailwind CSS with custom design system
+- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+- **State Management**: React Context, TanStack Query
+- **Routing**: React Router v6
+- **Icons**: Lucide React
+- **Charts**: Recharts
+- **Date Handling**: date-fns
+- **Form Handling**: React Hook Form with Zod validation
 
-### Backend & Database
-- **Supabase**: Backend-as-a-Service platform
-- **PostgreSQL**: Robust relational database
-- **Row Level Security (RLS)**: Database-level security policies
-- **Real-time Subscriptions**: Live data updates
-- **File Storage**: Secure image storage and management
+## 🎨 Design System
 
-### Additional Tools
-- **Vite**: Fast build tool and development server
-- **TanStack Query**: Data fetching and caching
-- **React Hook Form**: Form state management
-- **Sonner**: Beautiful toast notifications
+The app features a professional dark theme with custom color palette:
+- **Primary Colors**: Studio Blue (#3B82F6), Studio Accent (#8B5CF6)
+- **Background**: Studio Dark (#0A0A0B), Studio Midnight (#1A1A1B)
+- **Typography**: Clean, modern font hierarchy
+- **Components**: Glass morphism effects, hover animations, responsive design
 
-## Database Schema
+## 📁 Project Structure
 
-### Tables
-1. **users**: User profiles and authentication data
-2. **projects**: Photography project information
-3. **images**: Image metadata and file references
-4. **bookings**: Client booking and scheduling data
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # Shadcn/ui components
+│   ├── AppSidebar.tsx  # Navigation sidebar
+│   └── ProtectedRoute.tsx
+├── contexts/           # React contexts
+│   └── AuthContext.tsx # Authentication state
+├── hooks/              # Custom hooks
+│   └── use-toast.ts    # Toast notifications
+├── integrations/       # Third-party integrations
+│   └── supabase/       # Supabase client and types
+├── pages/              # Application pages
+│   ├── Dashboard.tsx   # Main dashboard
+│   ├── Projects.tsx    # Project management
+│   ├── Gallery.tsx     # Image gallery
+│   ├── Bookings.tsx    # Booking management
+│   ├── AuthPage.tsx    # Authentication
+│   └── Landing.tsx     # Landing page
+└── lib/                # Utility functions
+```
 
-### Security Features
-- Row Level Security (RLS) policies on all tables
-- User-specific data access controls
-- Secure file upload policies
-- Authentication-based route protection
+## 🗄️ Database Schema
 
-## Getting Started
+### Projects Table
+- **id**: UUID (Primary Key)
+- **user_id**: UUID (Foreign Key to auth.users)
+- **title**: Text (Required)
+- **description**: Text (Optional)
+- **client_name**: Text (Optional)
+- **shoot_date**: Date (Optional)
+- **location**: Text (Optional)
+- **status**: Text (Default: 'In Progress')
+- **created_at**: Timestamp
+- **updated_at**: Timestamp
+
+### Images Table
+- **id**: UUID (Primary Key)
+- **project_id**: UUID (Foreign Key to projects)
+- **user_id**: UUID (Foreign Key to auth.users)
+- **url**: Text (Required)
+- **filename**: Text (Required)
+- **tags**: Text Array (Optional)
+- **metadata**: JSONB (Optional)
+- **created_at**: Timestamp
+
+### Bookings Table
+- **id**: UUID (Primary Key)
+- **user_id**: UUID (Foreign Key to auth.users)
+- **client_name**: Text (Required)
+- **client_email**: Text (Required)
+- **shoot_date**: Date (Required)
+- **shoot_time**: Time (Optional)
+- **location**: Text (Optional)
+- **shoot_type**: Text (Optional)
+- **notes**: Text (Optional)
+- **status**: Text (Default: 'Pending')
+- **created_at**: Timestamp
+
+## 🔐 Security Features
+
+- **Row Level Security (RLS)**: All tables protected with user-specific policies
+- **Authentication**: Supabase Auth with email/password
+- **Protected Routes**: Authentication required for app access
+- **Data Validation**: TypeScript types and Zod schemas
+- **Secure Storage**: Supabase Storage with access policies
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn package manager
+- Node.js 18+ 
+- npm or yarn
 - Supabase account
 
 ### Installation
@@ -84,7 +140,7 @@ Imbisi Studio is a comprehensive web-based photography management platform built
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd imbisi-studio
+   cd photography-studio-app
    ```
 
 2. **Install dependencies**
@@ -92,185 +148,91 @@ Imbisi Studio is a comprehensive web-based photography management platform built
    npm install
    ```
 
-3. **Environment Setup**
-   - Create a Supabase project at [supabase.com](https://supabase.com)
-   - Update the Supabase configuration in `src/integrations/supabase/client.ts`
+3. **Set up Supabase**
+   - Create a new Supabase project
+   - Run the SQL migrations from `supabase/migrations/`
+   - Update `src/integrations/supabase/client.ts` with your project details
 
-4. **Database Setup**
-   - Run the SQL migrations in the Supabase SQL editor
-   - Set up Row Level Security policies
-   - Create storage bucket for images
-
-5. **Start development server**
+4. **Start the development server**
    ```bash
    npm run dev
    ```
 
-### Configuration
+### Environment Setup
 
-#### Supabase Setup
-1. **Authentication Configuration**:
-   - Enable email/password authentication
-   - Configure social login providers (Google, GitHub)
-   - Set redirect URLs for your domain
+The app uses Supabase with the following configuration:
+- **URL**: Your Supabase project URL
+- **Anon Key**: Your Supabase anonymous key
+- **Database**: PostgreSQL with RLS enabled
+- **Storage**: File uploads for project images
 
-2. **Database Tables**:
-   - Run the provided SQL migrations
-   - Ensure RLS policies are enabled
-   - Test data access with sample users
-
-3. **Storage Configuration**:
-   - Create `project-images` storage bucket
-   - Set up storage policies for file access
-   - Configure file size and type restrictions
-
-## User Guide
+## 📱 Usage
 
 ### For Photographers
 
-1. **Getting Started**:
-   - Register for an account or sign in
-   - Complete your profile setup
-   - Explore the dashboard
+1. **Sign up/Login** to access your dashboard
+2. **Create Projects** to organize your photography work
+3. **Upload Images** and organize them by project
+4. **Manage Bookings** from potential clients
+5. **Track Progress** through project statuses
+6. **View Analytics** on your dashboard
 
-2. **Managing Projects**:
-   - Create new photography projects
-   - Add client details and shoot information
-   - Track project status and progress
-   - Upload and organize project images
+### Demo Mode
 
-3. **Client Management**:
-   - View and manage client bookings
-   - Update booking status
-   - Communicate scheduling details
+The app includes a demo mode for testing:
+- Any email/password combination works
+- Data is stored locally for demo purposes
+- Full functionality available without backend setup
 
-4. **Gallery Management**:
-   - Upload images to projects
-   - Organize photos by project
-   - Add tags and metadata
-   - Search and filter images
+## 🔧 Development
 
-### For Clients
+### Available Scripts
 
-1. **Booking Process**:
-   - Fill out booking forms
-   - Provide shoot details and requirements
-   - Receive booking confirmations
-   - Track booking status
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## Security Features
+### Key Development Commands
 
-### Authentication
-- Secure password hashing
-- JWT token-based sessions
-- Social OAuth integration
-- Password reset functionality
+```bash
+# Install new dependencies
+npm install <package-name>
 
-### Data Protection
-- Row Level Security (RLS) policies
-- User-specific data access
-- Secure file upload validation
-- HTTPS enforcement
+# Run type checking
+npx tsc --noEmit
 
-### Privacy
-- User data isolation
-- GDPR compliance ready
-- Secure file storage
-- Access logging
-
-## API Documentation
-
-### Supabase Integration
-The platform uses Supabase as the backend service, providing:
-
-- **Authentication API**: User management and session handling
-- **Database API**: CRUD operations with real-time updates
-- **Storage API**: File upload and management
-- **Real-time API**: Live data synchronization
-
-### Key Endpoints
-- `/auth/*`: Authentication endpoints
-- `/rest/v1/*`: Database REST API
-- `/storage/v1/*`: File storage API
-- `/realtime/v1/*`: Real-time subscriptions
-
-## Development Notes
-
-### Code Structure
-```
-src/
-├── components/        # Reusable UI components
-├── pages/            # Route components
-├── contexts/         # React context providers
-├── hooks/            # Custom React hooks
-├── lib/              # Utility functions
-└── integrations/     # External service integrations
+# Generate Supabase types
+npx supabase gen types typescript --local > src/integrations/supabase/types.ts
 ```
 
-### Best Practices
-- Component composition over inheritance
-- Custom hooks for business logic
-- Type-safe API interactions
-- Responsive design principles
-- Accessibility considerations
+## 🎯 Features Roadmap
 
-### Performance Optimizations
-- Lazy loading for routes and components
-- Image optimization and caching
-- Database query optimization
-- Real-time subscription management
+- [ ] Advanced image editing tools
+- [ ] Client portal for viewing galleries
+- [ ] Invoice generation and payment processing
+- [ ] Calendar integration for shoot scheduling
+- [ ] Email automation for client communication
+- [ ] Mobile app version
+- [ ] Advanced analytics and reporting
+- [ ] Multi-photographer team support
 
-## Troubleshooting
+## 🤝 Contributing
 
-### Common Issues
+This is a photography business management application. Contributions are welcome! Please feel free to submit issues and enhancement requests.
 
-1. **Authentication Problems**:
-   - Check Supabase URL configuration
-   - Verify redirect URLs in Supabase dashboard
-   - Ensure RLS policies are correctly set up
+## 📄 License
 
-2. **Image Upload Issues**:
-   - Verify storage bucket exists
-   - Check storage policies
-   - Confirm file size and type restrictions
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-3. **Data Access Problems**:
-   - Review RLS policies
-   - Check user authentication status
-   - Verify table permissions
+## 🙏 Acknowledgments
 
-### Support
-For technical support or questions:
-- Check the documentation
-- Review error logs in the browser console
-- Contact the development team
-
-## Contributing
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-### Code Standards
-- Follow TypeScript best practices
-- Use ESLint and Prettier for code formatting
-- Write meaningful commit messages
-- Include tests for new features
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Acknowledgments
-
-- Built with [Lovable](https://lovable.dev) - AI-powered web development
-- Powered by [Supabase](https://supabase.com) - Open source Firebase alternative
-- UI components from [Shadcn/UI](https://ui.shadcn.com)
-- Icons from [Lucide](https://lucide.dev)
+- **Shadcn/ui** for the beautiful component library
+- **Supabase** for the robust backend infrastructure
+- **Tailwind CSS** for the utility-first styling approach
+- **Lucide** for the consistent icon set
+- **React Team** for the excellent framework
 
 ---
 
-**Imbisi Studio** - Empowering photographers with professional project management tools.
+**Built with ❤️ for photographers by photographers**

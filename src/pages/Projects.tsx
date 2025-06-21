@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,16 +32,22 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       fetchProjects();
+    } else if (!authLoading && !user) {
+      console.log('No user authenticated, cannot fetch projects');
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchProjects = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user authenticated for fetching projects');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -96,10 +101,11 @@ const Projects = () => {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!user) {
       toast({
-        title: "Error",
-        description: "You must be logged in to create a project.",
+        title: "Authentication Required",
+        description: "Please sign in to create a project.",
         variant: "destructive",
       });
       return;
@@ -118,6 +124,7 @@ const Projects = () => {
     };
 
     console.log('Creating project with data:', projectData);
+    console.log('Current user:', user.id);
 
     try {
       const { data, error } = await supabase
@@ -128,9 +135,15 @@ const Projects = () => {
 
       if (error) {
         console.error('Error creating project:', error);
+        let errorMessage = `Failed to create project: ${error.message}`;
+        
+        if (error.code === '42501') {
+          errorMessage = "Authentication error. Please sign out and sign back in.";
+        }
+        
         toast({
           title: "Error",
-          description: `Failed to create project: ${error.message}`,
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -168,12 +181,32 @@ const Projects = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex min-h-screen w-full bg-studio-dark">
         <AppSidebar />
         <main className="flex-1 p-6 flex items-center justify-center">
           <div className="text-white">Loading projects...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen w-full bg-studio-dark">
+        <AppSidebar />
+        <main className="flex-1 p-6 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
+            <p className="text-muted-foreground mb-6">Please sign in to manage your projects</p>
+            <Button
+              onClick={() => window.location.href = '/auth'}
+              className="bg-gradient-to-r from-studio-blue to-studio-accent"
+            >
+              Sign In
+            </Button>
+          </div>
         </main>
       </div>
     );

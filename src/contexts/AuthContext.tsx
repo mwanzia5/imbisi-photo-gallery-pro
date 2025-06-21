@@ -23,72 +23,69 @@ export const useAuth = () => {
   return context;
 };
 
-// Generate a proper UUID v4
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already "logged in" (stored in localStorage)
-    const demoUser = localStorage.getItem('demo-user');
-    if (demoUser) {
-      const userData = JSON.parse(demoUser);
-      setUser(userData);
-      setSession({ user: userData } as Session);
-    }
-    setLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    // Create a demo user object with proper UUID
-    const demoUser = {
-      id: generateUUID(),
-      email,
-      user_metadata: metadata || {},
-      created_at: new Date().toISOString(),
-    } as User;
-
-    localStorage.setItem('demo-user', JSON.stringify(demoUser));
-    setUser(demoUser);
-    setSession({ user: demoUser } as Session);
+    const redirectUrl = `${window.location.origin}/`;
     
-    return { data: { user: demoUser }, error: null };
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: metadata || {}
+      }
+    });
+
+    return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
-    // Accept any email/password combination with proper UUID
-    const demoUser = {
-      id: generateUUID(),
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      user_metadata: {},
-      created_at: new Date().toISOString(),
-    } as User;
+      password,
+    });
 
-    localStorage.setItem('demo-user', JSON.stringify(demoUser));
-    setUser(demoUser);
-    setSession({ user: demoUser } as Session);
-    
-    return { data: { user: demoUser }, error: null };
+    return { data, error };
   };
 
   const signOut = async () => {
-    localStorage.removeItem('demo-user');
-    setUser(null);
-    setSession(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   const resetPassword = async (email: string) => {
-    // Just return success for demo purposes
-    return { data: {}, error: null };
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`
+    });
+    return { data, error };
   };
 
   const value = {

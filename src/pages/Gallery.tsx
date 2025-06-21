@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,29 +52,40 @@ const Gallery = () => {
     if (!user) return;
     
     setLoading(true);
-    const { data, error } = await supabase
-      .from('images')
-      .select(`
-        id,
-        url,
-        filename,
-        tags,
-        created_at,
-        project_id,
-        projects(title)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+    try {
+      console.log('Fetching images for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('images')
+        .select(`
+          id,
+          url,
+          filename,
+          tags,
+          created_at,
+          project_id,
+          projects(title)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching images:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch images",
-        variant: "destructive",
-      });
-    } else if (data) {
-      setImages(data);
+      if (error) {
+        console.error('Error fetching images:', error);
+        // Don't show error for empty results
+        if (error.code !== 'PGRST116') {
+          toast({
+            title: "Info",
+            description: "No images found yet. Upload your first images!",
+          });
+        }
+        setImages([]);
+      } else if (data) {
+        setImages(data);
+        console.log('Images fetched successfully:', data);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching images:', error);
+      setImages([]);
     }
     setLoading(false);
   };
@@ -83,16 +93,22 @@ const Gallery = () => {
   const fetchProjects = async () => {
     if (!user) return;
     
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, title')
-      .eq('user_id', user.id)
-      .order('title');
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title')
+        .eq('user_id', user.id)
+        .order('title');
 
-    if (error) {
-      console.error('Error fetching projects:', error);
-    } else if (data) {
-      setProjects(data);
+      if (error) {
+        console.error('Error fetching projects:', error);
+        setProjects([]);
+      } else if (data) {
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching projects:', error);
+      setProjects([]);
     }
   };
 

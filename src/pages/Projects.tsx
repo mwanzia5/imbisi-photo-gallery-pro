@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,35 +43,46 @@ const Projects = () => {
     if (!user) return;
     
     setLoading(true);
-    const { data, error } = await supabase
-      .from('projects')
-      .select(`
-        id,
-        title,
-        description,
-        client_name,
-        shoot_date,
-        location,
-        status,
-        created_at,
-        images(count)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+    try {
+      console.log('Fetching projects for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          description,
+          client_name,
+          shoot_date,
+          location,
+          status,
+          created_at,
+          images(count)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching projects:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch projects",
-        variant: "destructive",
-      });
-    } else if (data) {
-      const projectsWithCount = data.map(project => ({
-        ...project,
-        image_count: project.images?.[0]?.count || 0
-      }));
-      setProjects(projectsWithCount);
+      if (error) {
+        console.error('Error fetching projects:', error);
+        // Don't show error for empty results
+        if (error.code !== 'PGRST116') {
+          toast({
+            title: "Info",
+            description: "No projects found yet. Create your first project!",
+          });
+        }
+        setProjects([]);
+      } else if (data) {
+        const projectsWithCount = data.map(project => ({
+          ...project,
+          image_count: project.images?.[0]?.count || 0
+        }));
+        setProjects(projectsWithCount);
+        console.log('Projects fetched successfully:', projectsWithCount);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching projects:', error);
+      setProjects([]);
     }
     setLoading(false);
   };
@@ -92,25 +102,35 @@ const Projects = () => {
       user_id: user.id,
     };
 
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([projectData])
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([projectData])
+        .select()
+        .single();
 
-    if (error) {
+      if (error) {
+        console.error('Error creating project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create project",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Project Created",
+          description: "Your new project has been created successfully.",
+        });
+        setIsDialogOpen(false);
+        fetchProjects(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Unexpected error creating project:', error);
       toast({
         title: "Error",
         description: "Failed to create project",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Project Created",
-        description: "Your new project has been created successfully.",
-      });
-      setIsDialogOpen(false);
-      fetchProjects(); // Refresh the list
     }
   };
 

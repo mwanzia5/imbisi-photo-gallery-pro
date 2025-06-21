@@ -23,6 +23,15 @@ export const useAuth = () => {
   return context;
 };
 
+// Generate a proper UUID v4
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -40,9 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    // Create a demo user object
+    // Create a demo user object with proper UUID
     const demoUser = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       email,
       user_metadata: metadata || {},
       created_at: new Date().toISOString(),
@@ -56,9 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    // Accept any email/password combination
+    // Accept any email/password combination with proper UUID
     const demoUser = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       email,
       user_metadata: {},
       created_at: new Date().toISOString(),

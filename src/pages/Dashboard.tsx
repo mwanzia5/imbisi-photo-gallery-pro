@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,63 +42,84 @@ const Dashboard = () => {
   const fetchProjects = async () => {
     if (!user) return;
     
-    const { data: projectsData, error } = await supabase
-      .from('projects')
-      .select(`
-        id,
-        title,
-        client_name,
-        shoot_date,
-        status,
-        created_at,
-        images(count)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(3);
+    try {
+      console.log('Fetching projects for user:', user.id);
+      
+      const { data: projectsData, error } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          client_name,
+          shoot_date,
+          status,
+          created_at,
+          images(count)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
 
-    if (error) {
-      console.error('Error fetching projects:', error);
-      return;
-    }
+      if (error) {
+        console.error('Error fetching projects:', error);
+        // Don't show error toast for empty results, just log it
+        if (error.code !== 'PGRST116') {
+          toast({
+            title: "Info",
+            description: "No projects found. Create your first project to get started!",
+          });
+        }
+        setProjects([]);
+        return;
+      }
 
-    if (projectsData) {
-      const projectsWithCount = projectsData.map(project => ({
-        ...project,
-        image_count: project.images?.[0]?.count || 0
-      }));
-      setProjects(projectsWithCount);
+      if (projectsData) {
+        const projectsWithCount = projectsData.map(project => ({
+          ...project,
+          image_count: project.images?.[0]?.count || 0
+        }));
+        setProjects(projectsWithCount);
+        console.log('Projects fetched successfully:', projectsWithCount);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching projects:', error);
+      setProjects([]);
     }
   };
 
   const fetchStats = async () => {
     if (!user) return;
 
-    // Get active projects count
-    const { count: activeProjectsCount } = await supabase
-      .from('projects')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .in('status', ['In Progress', 'Editing']);
+    try {
+      // Get active projects count
+      const { count: activeProjectsCount } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .in('status', ['In Progress', 'Editing']);
 
-    // Get total photos count
-    const { count: totalPhotosCount } = await supabase
-      .from('images')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+      // Get total photos count
+      const { count: totalPhotosCount } = await supabase
+        .from('images')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
-    // Get pending bookings count
-    const { count: pendingBookingsCount } = await supabase
-      .from('bookings')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'Pending');
+      // Get pending bookings count
+      const { count: pendingBookingsCount } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pending');
 
-    setStats({
-      activeProjects: activeProjectsCount || 0,
-      totalPhotos: totalPhotosCount || 0,
-      pendingBookings: pendingBookingsCount || 0,
-      storageUsed: "0 MB" // This would need storage API to calculate
-    });
+      setStats({
+        activeProjects: activeProjectsCount || 0,
+        totalPhotos: totalPhotosCount || 0,
+        pendingBookings: pendingBookingsCount || 0,
+        storageUsed: "0 MB" // This would need storage API to calculate
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      // Keep default stats if there's an error
+    }
   };
 
   const handleSignOut = async () => {

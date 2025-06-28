@@ -35,65 +35,39 @@ const Projects = () => {
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!authLoading && user) {
-      fetchProjects();
-    } else if (!authLoading && !user) {
-      console.log('No user authenticated, cannot fetch projects');
-      setLoading(false);
+    if (!authLoading) {
+      if (user) {
+        fetchProjects();
+      } else {
+        setProjects([]);
+        setLoading(false);
+      }
     }
   }, [user, authLoading]);
 
   const fetchProjects = async () => {
     if (!user) {
       console.log('No user authenticated for fetching projects');
+      setProjects([]);
+      setLoading(false);
       return;
     }
     
     setLoading(true);
     try {
-      console.log('Fetching projects for user:', user.id);
+      console.log('Fetching projects for demo user:', user.id);
       
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          id,
-          title,
-          description,
-          client_name,
-          shoot_date,
-          location,
-          status,
-          created_at,
-          images(count)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching projects:', error);
-        if (error.code !== 'PGRST116') {
-          toast({
-            title: "Error",
-            description: "Failed to fetch projects. Please try again.",
-            variant: "destructive",
-          });
-        }
+      // For demo purposes, load projects from localStorage
+      const storedProjects = localStorage.getItem(`projects-${user.id}`);
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        setProjects(projects);
+        console.log('Demo projects loaded:', projects);
+      } else {
         setProjects([]);
-      } else if (data) {
-        const projectsWithCount = data.map(project => ({
-          ...project,
-          image_count: project.images?.[0]?.count || 0
-        }));
-        setProjects(projectsWithCount);
-        console.log('Projects fetched successfully:', projectsWithCount);
       }
     } catch (error) {
-      console.error('Unexpected error fetching projects:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while fetching projects.",
-        variant: "destructive",
-      });
+      console.error('Error loading demo projects:', error);
       setProjects([]);
     }
     setLoading(false);
@@ -113,54 +87,41 @@ const Projects = () => {
 
     setCreating(true);
     const formData = new FormData(e.target as HTMLFormElement);
-    const projectData = {
+    
+    // Create new project for demo
+    const newProject: Project = {
+      id: `project-${Date.now()}`,
       title: formData.get("title") as string,
       description: formData.get("description") as string || null,
       client_name: formData.get("client") as string || null,
       shoot_date: formData.get("date") as string || null,
       location: formData.get("location") as string || null,
       status: formData.get("status") as string || "In Progress",
-      user_id: user.id,
+      created_at: new Date().toISOString(),
+      image_count: 0
     };
 
-    console.log('Creating project with data:', projectData);
-    console.log('Current user:', user.id);
+    console.log('Creating demo project:', newProject);
 
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([projectData])
-        .select()
-        .single();
+      // Store in localStorage for demo
+      const existingProjects = JSON.parse(localStorage.getItem(`projects-${user.id}`) || '[]');
+      existingProjects.unshift(newProject);
+      localStorage.setItem(`projects-${user.id}`, JSON.stringify(existingProjects));
 
-      if (error) {
-        console.error('Error creating project:', error);
-        let errorMessage = `Failed to create project: ${error.message}`;
-        
-        if (error.code === '42501') {
-          errorMessage = "Authentication error. Please sign out and sign back in.";
-        }
-        
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      } else {
-        console.log('Project created successfully:', data);
-        toast({
-          title: "Success",
-          description: "Your new project has been created successfully.",
-        });
-        setIsDialogOpen(false);
-        (e.target as HTMLFormElement).reset();
-        fetchProjects(); // Refresh the list
-      }
+      console.log('Demo project created successfully:', newProject);
+      toast({
+        title: "Success",
+        description: "Your new project has been created successfully.",
+      });
+      setIsDialogOpen(false);
+      (e.target as HTMLFormElement).reset();
+      fetchProjects(); // Refresh the list
     } catch (error) {
-      console.error('Unexpected error creating project:', error);
+      console.error('Error creating demo project:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred while creating the project.",
+        description: "An error occurred while creating the project.",
         variant: "destructive",
       });
     }

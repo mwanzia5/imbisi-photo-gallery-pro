@@ -23,69 +23,90 @@ export const useAuth = () => {
   return context;
 };
 
+// Demo user creator function
+const createDemoUser = (email: string, fullName?: string): User => ({
+  id: `demo-${email}`,
+  email,
+  aud: 'authenticated',
+  role: 'authenticated',
+  email_confirmed_at: new Date().toISOString(),
+  phone: '',
+  confirmed_at: new Date().toISOString(),
+  last_sign_in_at: new Date().toISOString(),
+  app_metadata: {},
+  user_metadata: { full_name: fullName || email.split('@')[0] },
+  identities: [],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+});
+
+// Demo session creator function
+const createDemoSession = (user: User): Session => ({
+  access_token: `demo-token-${user.id}`,
+  refresh_token: `demo-refresh-${user.id}`,
+  expires_in: 3600,
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  token_type: 'bearer',
+  user
+});
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    // Check for demo session in localStorage
+    const demoSession = localStorage.getItem('demo-auth-session');
+    if (demoSession) {
+      try {
+        const parsedSession = JSON.parse(demoSession);
+        setSession(parsedSession);
+        setUser(parsedSession.user);
+      } catch (error) {
+        localStorage.removeItem('demo-auth-session');
       }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // For demo purposes, accept any email/password and create a demo user
+    const demoUser = createDemoUser(email, metadata?.full_name);
+    const demoSession = createDemoSession(demoUser);
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: metadata || {}
-      }
-    });
+    // Store demo session
+    localStorage.setItem('demo-auth-session', JSON.stringify(demoSession));
+    
+    setSession(demoSession);
+    setUser(demoUser);
 
-    return { data, error };
+    return { data: { user: demoUser, session: demoSession }, error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // For demo purposes, accept any email/password and create a demo user
+    const demoUser = createDemoUser(email);
+    const demoSession = createDemoSession(demoUser);
+    
+    // Store demo session
+    localStorage.setItem('demo-auth-session', JSON.stringify(demoSession));
+    
+    setSession(demoSession);
+    setUser(demoUser);
 
-    return { data, error };
+    return { data: { user: demoUser, session: demoSession }, error: null };
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Sign out error:', error);
-    }
+    localStorage.removeItem('demo-auth-session');
+    setSession(null);
+    setUser(null);
   };
 
   const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth`
-    });
-    return { data, error };
+    // For demo purposes, just return success
+    return { data: null, error: null };
   };
 
   const value = {

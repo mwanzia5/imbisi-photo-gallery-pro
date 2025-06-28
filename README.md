@@ -9,8 +9,9 @@ A modern, full-featured photography business management application built with R
 - Create and organize photography projects
 - Track project status (In Progress, Editing, Completed, Delivered)
 - Manage client information and shoot details
-- Image gallery integration
+- **Project-Gallery Integration**: Each project shows image count and links directly to project-specific images
 - Project timeline tracking
+- View project galleries with filtered images
 
 ### Dashboard
 - Comprehensive overview of your business
@@ -20,22 +21,25 @@ A modern, full-featured photography business management application built with R
 - Quick action shortcuts
 
 ### Booking System
-- Client booking management
-- Shoot scheduling
-- Location tracking
-- Booking status management
-- Client communication tools
+- **Live Booking Management**: Create new bookings that instantly appear in the bookings list
+- Client booking management with real-time status updates
+- Shoot scheduling with date and time selection
+- Location tracking and shoot type categorization
+- Booking status management (Pending, Approved, Rejected, Completed)
+- Client communication tools and notes system
+- **Interactive Status Updates**: Approve or reject bookings with instant feedback
 
 ### Image Gallery
-- Upload and organize photos by project
-- Tag and categorize images
-- Metadata management
-- Secure file storage
+- **Project-Linked Gallery**: Upload and organize photos by specific projects
+- Tag and categorize images with project association
+- Metadata management and file information
+- **Project Selection**: Choose which project to associate images with during upload
+- Secure file storage with project organization
 
 ### Authentication
 - Demo mode for presentations (accepts any email/password)
 - User profile management
-- Protected routes
+- Protected routes with Row Level Security
 - Session persistence
 
 ## 🛠️ Tech Stack
@@ -75,9 +79,9 @@ src/
 │   └── supabase/       # Supabase client and types
 ├── pages/              # Application pages
 │   ├── Dashboard.tsx   # Main dashboard
-│   ├── Projects.tsx    # Project management
-│   ├── Gallery.tsx     # Image gallery
-│   ├── Bookings.tsx    # Booking management
+│   ├── Projects.tsx    # Project management with gallery integration
+│   ├── Gallery.tsx     # Image gallery with project filtering
+│   ├── Bookings.tsx    # Live booking management
 │   ├── AuthPage.tsx    # Authentication
 │   └── Landing.tsx     # Landing page
 └── lib/                # Utility functions
@@ -99,7 +103,7 @@ src/
 
 ### Images Table
 - **id**: UUID (Primary Key)
-- **project_id**: UUID (Foreign Key to projects)
+- **project_id**: UUID (Foreign Key to projects) - **Links images to specific projects**
 - **user_id**: UUID (Foreign Key to auth.users)
 - **url**: Text (Required)
 - **filename**: Text (Required)
@@ -126,7 +130,7 @@ src/
 - **Demo Authentication**: Accepts any email/password for presentations
 - **Protected Routes**: Authentication required for app access
 - **Data Validation**: TypeScript types and Zod schemas
-- **Secure Storage**: Supabase Storage with access policies
+- **Secure Storage**: Supabase Storage with access policies and project-based organization
 
 ## 🚀 Getting Started
 
@@ -164,7 +168,7 @@ The app uses Supabase with the following configuration:
 - **URL**: Your Supabase project URL
 - **Anon Key**: Your Supabase anonymous key
 - **Database**: PostgreSQL with RLS enabled
-- **Storage**: File uploads for project images
+- **Storage**: File uploads for project images with bucket organization
 
 ## 📱 Usage
 
@@ -172,7 +176,7 @@ The app uses Supabase with the following configuration:
 
 The app is currently configured in demo mode for presentations:
 - **Login**: Any email and password combination works
-- **Data Storage**: Projects are stored locally in browser storage
+- **Data Storage**: Projects and bookings are stored locally in browser storage
 - **Full Functionality**: All features work without backend setup
 - **Perfect for**: Demonstrations, testing, and showcasing
 
@@ -180,9 +184,9 @@ The app is currently configured in demo mode for presentations:
 
 1. **Sign up/Login** with any credentials (demo mode)
 2. **Create Projects** to organize your photography work
-3. **Upload Images** and organize them by project
-4. **Manage Bookings** from potential clients
-5. **Track Progress** through project statuses
+3. **Upload Images** and link them to specific projects through the gallery
+4. **Manage Bookings** from potential clients with real-time status updates
+5. **Track Progress** through project statuses and image counts
 6. **View Analytics** on your dashboard
 
 ## 🔧 Development
@@ -212,6 +216,8 @@ npx supabase gen types typescript --local > src/integrations/supabase/types.ts
 ### ✅ Completed Features
 - [x] Authentication system (demo mode)
 - [x] Project management with CRUD operations
+- [x] **Project-Gallery Integration**: Projects show image counts and link to filtered galleries
+- [x] **Live Booking System**: Real-time booking creation and status management
 - [x] Dashboard with overview statistics
 - [x] Professional UI/UX design
 - [x] Responsive layout
@@ -220,15 +226,14 @@ npx supabase gen types typescript --local > src/integrations/supabase/types.ts
 - [x] Local data persistence
 - [x] Toast notifications
 - [x] Form validation
+- [x] **Image Upload with Project Association**: Gallery uploads are linked to specific projects
 
 ### 🚧 In Progress
-- [ ] Image upload functionality
-- [ ] Gallery management
-- [ ] Booking system implementation
+- [ ] Supabase backend integration for persistent data
+- [ ] Advanced image editing tools
 - [ ] Client management features
 
 ### 📋 Future Enhancements
-- [ ] Advanced image editing tools
 - [ ] Client portal for viewing galleries
 - [ ] Invoice generation and payment processing
 - [ ] Calendar integration for shoot scheduling
@@ -236,6 +241,7 @@ npx supabase gen types typescript --local > src/integrations/supabase/types.ts
 - [ ] Mobile app version
 - [ ] Advanced analytics and reporting
 - [ ] Multi-photographer team support
+- [ ] Real-time collaboration features
 
 ## 🤝 Contributing
 
@@ -256,3 +262,17 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Built with ❤️ for photographers by photographers**
+
+### Recent Updates
+
+#### Project-Gallery Integration (Latest)
+- **Linked Projects and Gallery**: Projects now display image counts and provide direct access to project-specific images
+- **Smart Image Upload**: Gallery uploads automatically associate with selected projects
+- **Project Navigation**: Easy navigation between projects and their corresponding images
+- **Image Filtering**: Gallery view can be filtered by specific projects
+
+#### Live Booking Management (Latest)
+- **Real-time Booking Creation**: New bookings instantly appear in the bookings list
+- **Interactive Status Management**: Approve or reject bookings with immediate visual feedback
+- **Enhanced Form Handling**: Improved booking form with proper validation and state management
+- **Dynamic Status Updates**: Booking statuses update in real-time across the interface

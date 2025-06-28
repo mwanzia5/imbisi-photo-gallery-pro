@@ -13,11 +13,25 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Calendar, Clock, MapPin, User, Plus, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface Booking {
+  id: number;
+  clientName: string;
+  email: string;
+  shootType: string;
+  date: string;
+  time: string;
+  location: string;
+  status: string;
+  notes: string;
+  submittedAt: string;
+}
+
 const Bookings = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [shootType, setShootType] = useState("");
   const { toast } = useToast();
 
-  const bookings = [
+  const initialBookings: Booking[] = [
     {
       id: 1,
       clientName: "Emily Rodriguez",
@@ -68,16 +82,45 @@ const Bookings = () => {
     },
   ];
 
+  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+
   const handleSubmitBooking = (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const newBooking: Booking = {
+      id: Date.now(), // Simple ID generation for demo
+      clientName: formData.get('clientName') as string,
+      email: formData.get('email') as string,
+      shootType: shootType,
+      date: formData.get('date') as string,
+      time: formData.get('time') as string,
+      location: formData.get('location') as string,
+      status: "Pending",
+      notes: formData.get('notes') as string || "",
+      submittedAt: new Date().toISOString().split('T')[0],
+    };
+
+    setBookings(prev => [newBooking, ...prev]);
+    
     toast({
       title: "Booking Submitted",
       description: "Your booking request has been submitted successfully.",
     });
     setIsDialogOpen(false);
+    setShootType("");
+    (e.target as HTMLFormElement).reset();
   };
 
   const handleStatusChange = (bookingId: number, newStatus: string) => {
+    setBookings(prev => 
+      prev.map(booking => 
+        booking.id === bookingId 
+          ? { ...booking, status: newStatus }
+          : booking
+      )
+    );
+    
     toast({
       title: "Status Updated",
       description: `Booking has been ${newStatus.toLowerCase()}.`,
@@ -131,6 +174,7 @@ const Bookings = () => {
                     <Label htmlFor="clientName">Client Name</Label>
                     <Input 
                       id="clientName" 
+                      name="clientName"
                       placeholder="Full name"
                       className="bg-studio-dark border-white/20 focus:border-studio-blue"
                       required
@@ -140,6 +184,7 @@ const Bookings = () => {
                     <Label htmlFor="email">Email</Label>
                     <Input 
                       id="email" 
+                      name="email"
                       type="email"
                       placeholder="client@email.com"
                       className="bg-studio-dark border-white/20 focus:border-studio-blue"
@@ -150,16 +195,16 @@ const Bookings = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="shootType">Shoot Type</Label>
-                  <Select>
+                  <Select value={shootType} onValueChange={setShootType} required>
                     <SelectTrigger className="bg-studio-dark border-white/20 focus:border-studio-blue">
                       <SelectValue placeholder="Select shoot type" />
                     </SelectTrigger>
                     <SelectContent className="bg-studio-midnight border-white/10">
-                      <SelectItem value="wedding">Wedding Photography</SelectItem>
-                      <SelectItem value="corporate">Corporate Headshots</SelectItem>
-                      <SelectItem value="product">Product Photography</SelectItem>
-                      <SelectItem value="portrait">Portrait Session</SelectItem>
-                      <SelectItem value="event">Event Photography</SelectItem>
+                      <SelectItem value="Wedding Photography">Wedding Photography</SelectItem>
+                      <SelectItem value="Corporate Headshots">Corporate Headshots</SelectItem>
+                      <SelectItem value="Product Photography">Product Photography</SelectItem>
+                      <SelectItem value="Portrait Session">Portrait Session</SelectItem>
+                      <SelectItem value="Event Photography">Event Photography</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -169,6 +214,7 @@ const Bookings = () => {
                     <Label htmlFor="date">Preferred Date</Label>
                     <Input 
                       id="date" 
+                      name="date"
                       type="date"
                       className="bg-studio-dark border-white/20 focus:border-studio-blue"
                       required
@@ -178,6 +224,7 @@ const Bookings = () => {
                     <Label htmlFor="time">Preferred Time</Label>
                     <Input 
                       id="time" 
+                      name="time"
                       type="time"
                       className="bg-studio-dark border-white/20 focus:border-studio-blue"
                       required
@@ -189,6 +236,7 @@ const Bookings = () => {
                   <Label htmlFor="location">Location</Label>
                   <Input 
                     id="location" 
+                    name="location"
                     placeholder="Venue or address"
                     className="bg-studio-dark border-white/20 focus:border-studio-blue"
                     required
@@ -199,6 +247,7 @@ const Bookings = () => {
                   <Label htmlFor="notes">Additional Notes</Label>
                   <Textarea 
                     id="notes" 
+                    name="notes"
                     placeholder="Any special requirements or details..."
                     className="bg-studio-dark border-white/20 focus:border-studio-blue"
                     rows={3}

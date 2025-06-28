@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,10 +10,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Plus, Calendar, MapPin, User } from "lucide-react";
+import { Camera, Plus, Calendar, MapPin, User, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Project {
   id: string;
@@ -33,6 +35,7 @@ const Projects = () => {
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!authLoading) {
@@ -61,8 +64,14 @@ const Projects = () => {
       const storedProjects = localStorage.getItem(`projects-${user.id}`);
       if (storedProjects) {
         const projects = JSON.parse(storedProjects);
-        setProjects(projects);
-        console.log('Demo projects loaded:', projects);
+        // Also get image count for each project from localStorage
+        const projectsWithImageCount = projects.map((project: Project) => {
+          const storedImages = localStorage.getItem(`images-${user.id}-${project.id}`);
+          const imageCount = storedImages ? JSON.parse(storedImages).length : 0;
+          return { ...project, image_count: imageCount };
+        });
+        setProjects(projectsWithImageCount);
+        console.log('Demo projects loaded:', projectsWithImageCount);
       } else {
         setProjects([]);
       }
@@ -126,6 +135,11 @@ const Projects = () => {
       });
     }
     setCreating(false);
+  };
+
+  const handleViewProject = (projectId: string) => {
+    // Navigate to gallery with project filter
+    navigate(`/gallery?project=${projectId}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -319,13 +333,17 @@ const Projects = () => {
                   )}
                   <div className="flex items-center justify-between pt-3 border-t border-white/10">
                     <span className="text-sm text-muted-foreground">{project.image_count || 0} photos</span>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="border-studio-blue/30 text-studio-blue hover:bg-studio-blue hover:text-white"
-                    >
-                      View Project
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="border-studio-blue/30 text-studio-blue hover:bg-studio-blue hover:text-white"
+                        onClick={() => handleViewProject(project.id)}
+                      >
+                        <ImageIcon className="w-4 h-4 mr-1" />
+                        Gallery
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
